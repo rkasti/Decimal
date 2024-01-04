@@ -278,23 +278,37 @@ Decimal& Decimal::operator*=(Decimal other)
 		}
 	}
 	else {
-		// remove 9 digits from the values and put them in val_lo and other_val_lo
+		uint8_t remove = (count_digits(_val) + count_digits(other._val)) / 4;
+		// remove remove digits from the values and put them in val_lo and other_val_lo
 		// (hope for the compiler to use only one division to get the result and the remainder) 7006652
-		int64_t val_lo = _val % powers_of_ten[9];
-		_val /= powers_of_ten[9];
-		int64_t other_val_lo = other._val % powers_of_ten[9];
-		other._val /= powers_of_ten[9];
+		int64_t val_lo = _val % powers_of_ten[remove];
+		_val /= powers_of_ten[remove];
+		int64_t other_val_lo = other._val % powers_of_ten[remove];
+		other._val /= powers_of_ten[remove];
 
-		// this * other = (val_lo + _val * 10^9) * (other_val_lo + other._val * 10^9)
-		//              = (val_lo / 10^9 + _val) * (other_val_lo / 10^9 + other._val)    when increasing _exp of the result by 18
-		//              = (val_lo * other_val_lo / 10^18) + (val_lo * other._val / 10^9) + (_val * other_val_lo / 10^9) + (_val * other._val)
-		//              = ((val_lo * other_val_lo + val_lo * other._val) / 10^9) + (_val * other._val) + (val_lo * other_val_lo / 10^18)
+		// this * other = (val_lo + _val * 10^remove) * (other_val_lo + other._val * 10^remove)
+		//              = (val_lo / 10^remove + _val) * (other_val_lo / 10^remove + other._val)    when increasing _exp of the result by (2*remove)
+		//              = (val_lo * other_val_lo / 10^(2*remove)) + (val_lo * other._val / 10^remove) + (_val * other_val_lo / 10^remove) + (_val * other._val)
+		//              = ((val_lo * other_val_lo + val_lo * other._val) / 10^remove) + (_val * other._val) + (val_lo * other_val_lo / 10^(2*remove))
+
+		// (val_lo * other_val_lo + val_lo * other._val) / 10^remove
 		int64_t res = (val_lo * other._val + _val * other_val_lo);
-		shift_right(res, 9);
+		res /= powers_of_ten[remove - 1];
+		int8_t last_digit = res % 10;
+		res /= 10;
+		// _val * other._val
 		res += _val * other._val;
-		res += val_lo * other_val_lo / powers_of_ten[18];
+		// val_lo * other_val_lo / 10^(2*remove)
+		val_lo *= other_val_lo;
+		val_lo /= powers_of_ten[(remove *= 2) - 1];
+		val_lo += last_digit;
+		last_digit = val_lo % 10;
+		if (last_digit > 4) val_lo += 10;
+		else if (last_digit < -4) val_lo -= 10;
+		res += val_lo / 10;
+
 		_val = res;
-		_exp += 18 + other._exp;
+		_exp += remove + other._exp;
 
 		// exp can't be decreased anymore because all digits of _val are occupied => Error when Exponent is too big
 		if (_exp > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
@@ -428,7 +442,7 @@ void Decimal::maximize_exp() const
 
 void Decimal::shift_right(int64_t& value, uint8_t shift) {
 	value /= powers_of_ten[shift - 1];
-	uint8_t last_digit = value % 10;
+	int8_t last_digit = value % 10;
 	if (last_digit > 4) value += 10;
 	else if (last_digit < -4) value -= 10;
 	value /= 10;
