@@ -76,13 +76,13 @@ public:
 	Decimal& round();
 	Decimal& floor();
 	Decimal& ceil();
-	Decimal& abs();
 	Decimal& to_int();
+	Decimal& abs();
 	Decimal& negate();
-	Decimal& factorial();
 
 	Decimal& pow(const Decimal& other);
 	Decimal& root(const Decimal& other);
+	Decimal& factorial();
 
 	std::string to_string() const;
 

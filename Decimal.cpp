@@ -363,8 +363,49 @@ Decimal& Decimal::operator^=(Decimal other)
 	return *this;
 }
 
+Decimal& Decimal::round() {
+	return *this;
+}
+
+Decimal& Decimal::floor() {
+	return *this;
+}
+
+Decimal& Decimal::ceil() {
+	return *this;
+}
+
+Decimal& Decimal::to_int() {
+	return *this;
+}
+
+Decimal& Decimal::abs() {
+	_val = std::abs(_val);
+	return *this;
+}
+
 Decimal& Decimal::negate() {
 	_val *= -1;
+	return *this;
+}
+
+Decimal& Decimal::pow(const Decimal& other) {
+	return *this;
+}
+
+Decimal& Decimal::root(const Decimal& other) {
+	return *this;
+}
+
+Decimal& Decimal::factorial() {
+	maximize_exp();
+	if (_exp != 0 || _val < 0 || _val > 3253) std::cout << "Error: Decimal factorial overflow";
+	else {
+		Decimal res = _val;
+		_val = 1;
+		for (; res._val > 1; res._val--)
+			operator*=(res);
+	}
 	return *this;
 }
 
