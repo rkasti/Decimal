@@ -90,7 +90,7 @@ private:
 	/// <summary>
 	/// contains all values for 10^n with n from 0 to DECIMAL_VALUE_PRECISION-1
 	/// </summary>
-	static const int64_t powers_of_ten[DECIMAL_VALUE_PRECISION];
+	static const int64_t powers_of_ten[DECIMAL_VALUE_PRECISION + 1];
 	/// <summary>
 	/// count the number of digits after the first non-zero digit (base 10)
 	/// </summary>
