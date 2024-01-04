@@ -189,18 +189,16 @@ Decimal& Decimal::operator+=(Decimal other)
 	if (other._val == 0) return *this;
 
 	// if the exponents are not equal: make them equal by shifting the commas and changing the exponents
+	// other._exp is used to store the difference between the exponents as it is not needed anymore
 	if (other._exp > _exp) {
-		// other._exp is used to store the difference between the exponents
 		other._exp -= _exp;
 
-		// calculate the number of digits other._val can be shifted to the left without loss of digits
-		uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
-
 		// test if the comma can be shifted enough to compensate the difference in exponents
-		if (shift >= other._exp) other._val *= powers_of_ten[other._exp];
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp - 1]) {
+			other._val *= powers_of_ten[other._exp];
+		}
 		else {
-			// the comma cannot be shifted enough
-			// shift other._val as much as possible to the left
+			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
 			other._val *= powers_of_ten[shift];
 			other._exp -= shift;
 
@@ -211,22 +209,15 @@ Decimal& Decimal::operator+=(Decimal other)
 		}
 	}
 	else if (other._exp < _exp) {
-		// other._exp is used to store the difference between the exponents
-		other._exp = _exp - other._exp;
-
-		// calculate the number of digits _val can be shifted to the left without loss of digits
-		uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
+		other._exp = _exp - other._exp;;
 
 		// test if the comma can be shifted enough to compensate the difference in exponents
-		if (shift >= other._exp) {
-			// the comma can be shifted enough
-			// shift it and change the exponent
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp - 1]) {
 			_val *= powers_of_ten[other._exp];
 			_exp -= other._exp;
 		}
 		else {
-			// the comma can not be shifted enough
-			// shift _val as much as possible to the left
+			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
 			_val *= powers_of_ten[shift];
 			_exp -= shift;
 
@@ -240,8 +231,10 @@ Decimal& Decimal::operator+=(Decimal other)
 	// assuming the exponents are equal: add the values together
 	_val += other._val;
 
-	// if overflow: shift the comma and increase the exponent
+	// exponent can't overflow because it can only be betweeen the exponents of the two values (which are not overflown)
+	// value can only overflow to double of DECIMAL_VALUE_MAX -> if overflow, shift the comma by one and increase the exponent by one
 	// only possible because int64_t can represent at least double of DECIMAL_VALUE_MAX
+	// if exponent is already DECIMAL_EXP_MAX, it is gonna be too big -> Error
 	if (DECIMAL_VALUE_MAX > std::abs(_val)) {
 		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
 		_exp++;
@@ -268,7 +261,7 @@ Decimal& Decimal::operator*=(Decimal other)
 
 	int64_t test = _val * other._val;
 	if (test / other._val == _val) {
-		// no overflow
+		// no value overflow
 		_val = test;
 		_exp += other._exp;
 
@@ -279,7 +272,6 @@ Decimal& Decimal::operator*=(Decimal other)
 			// check if, when shifting _val to the left, the exponent would be still too big
 			if (_exp > DECIMAL_EXP_MAX + shift) std::cout << "Error: Decimal exponent overflow";
 			else {
-				// exponent is not too big
 				shift_right(_val, _exp - DECIMAL_EXP_MAX);
 				_exp = DECIMAL_EXP_MAX;
 			}
@@ -314,7 +306,9 @@ Decimal& Decimal::operator*=(Decimal other)
 
 Decimal& Decimal::operator/=(Decimal other)
 {
+	// not used yet
 	bool exact = false;
+
 	int64_t res = _val / other._val;
 	_val %= other._val;
 	_val *= powers_of_ten[DECIMAL_VALUE_PRECISION - count_digits(_val)];
@@ -382,7 +376,9 @@ void Decimal::maximize_exp() const
 
 void Decimal::shift_right(int64_t& value, uint8_t shift) {
 	value /= powers_of_ten[shift - 1];
-	if (value % 10 > 4) value += 10;
+	uint8_t last_digit = value % 10;
+	if (last_digit > 4) value += 10;
+	else if (last_digit < -4) value -= 10;
 	value /= 10;
 }
 
