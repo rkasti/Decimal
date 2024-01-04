@@ -10,8 +10,8 @@
 
 int main()
 {
-	Decimal a(500, 1);
-	Decimal b(5, 0);
+	Decimal a(74536, 45);
+	Decimal b(768, -3);
 	Decimal c = a / b;
 	std::cout << c.to_string() << std::endl;
 	auto start = std::chrono::system_clock::now();

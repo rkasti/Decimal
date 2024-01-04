@@ -312,11 +312,11 @@ Decimal& Decimal::operator/=(Decimal other)
 	int64_t res = _val / other._val;
 	_val %= other._val;
 	if (_val != 0) {
-		_val *= powers_of_ten[DECIMAL_VALUE_PRECISION - count_digits(_val)];
 		while (true) {
+			int64_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
+			_val *= powers_of_ten[shift];
 			int64_t div = _val / other._val;
 			_val %= other._val;
-			uint8_t shift = count_digits(div);
 			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(res);
 			if (shift > max_shift) {
 				if (_val == 0 && div % powers_of_ten[shift - max_shift] == 0) exact = true;
@@ -334,7 +334,6 @@ Decimal& Decimal::operator/=(Decimal other)
 				break;
 			}
 			if (shift == max_shift) break;
-			_val *= powers_of_ten[DECIMAL_VALUE_PRECISION - count_digits(_val)];
 		}
 	}
 
