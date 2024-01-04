@@ -8,19 +8,14 @@
 #include <chrono>
 
 
-void speed_test() {
-	auto start = std::chrono::system_clock::now();
-	for (size_t counter = 0; counter < 1000000; ++counter)
-		auto duration = std::chrono::duration_cast<TimeT>
-		(std::chrono::system_clock::now() - start) / 1000000;
-	return duration.count();
-}
-
-
 int main()
 {
-	Decimal a(1, 1);
-	Decimal b(3, 0);
+	Decimal a(500, 1);
+	Decimal b(5, 0);
 	Decimal c = a / b;
 	std::cout << c.to_string() << std::endl;
+	auto start = std::chrono::system_clock::now();
+	for (size_t counter = 0; counter < 1000000; ++counter) c = a / b;
+	auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - start) / 1000000;
+	std::cout << duration.count() << "ns" << std::endl;
 }

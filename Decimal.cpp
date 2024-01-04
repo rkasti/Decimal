@@ -311,29 +311,31 @@ Decimal& Decimal::operator/=(Decimal other)
 
 	int64_t res = _val / other._val;
 	_val %= other._val;
-	_val *= powers_of_ten[DECIMAL_VALUE_PRECISION - count_digits(_val)];
-
-	while (true) {
-		int64_t div = _val / other._val;
-		uint8_t shift = count_digits(div);
-		uint8_t max_shift = DECIMAL_VALUE_PRECISION - shift - 1;
-		if (shift > max_shift) {
-			res *= powers_of_ten[max_shift];
-			shift_right(div, shift - max_shift);
-			res += div;
-			_exp -= max_shift;
-			break;
-		}
-		res *= powers_of_ten[shift];
-		res += div;
-		_exp -= shift;
-		_val %= other._val;
-		if (_val == 0) {
-			exact = true;
-			break;
-		}
-		if (shift == max_shift) break;
+	if (_val != 0) {
 		_val *= powers_of_ten[DECIMAL_VALUE_PRECISION - count_digits(_val)];
+		while (true) {
+			int64_t div = _val / other._val;
+			_val %= other._val;
+			uint8_t shift = count_digits(div);
+			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(res);
+			if (shift > max_shift) {
+				if (_val == 0 && div % powers_of_ten[shift - max_shift] == 0) exact = true;
+				shift_right(div, shift - max_shift);
+				res *= powers_of_ten[max_shift];
+				res += div;
+				_exp -= max_shift;
+				break;
+			}
+			res *= powers_of_ten[shift];
+			res += div;
+			_exp -= shift;
+			if (_val == 0) {
+				exact = true;
+				break;
+			}
+			if (shift == max_shift) break;
+			_val *= powers_of_ten[DECIMAL_VALUE_PRECISION - count_digits(_val)];
+		}
 	}
 
 	_val = res;
