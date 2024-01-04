@@ -346,6 +346,17 @@ Decimal& Decimal::operator/=(Decimal other)
 
 Decimal& Decimal::operator%=(Decimal other)
 {
+	if (operator<(other)) return *this;
+	maximize_exp();
+	other.maximize_exp();
+	if (_val == other._val && _exp == other._exp) {
+		_val = 0;
+		_exp = 0;
+		return *this;
+	}
+
+
+	_exp = other._exp;
 	return *this;
 }
 
