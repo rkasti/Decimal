@@ -10,9 +10,9 @@
 
 int main()
 {
-	Decimal a(74536, 10);
-	Decimal b(768, -3);
-	Decimal c = a + b;
+	Decimal a(74536, 3);
+	Decimal b(768, 2);
+	Decimal c = a;
 	std::cout << c.to_string() << std::endl;
 	auto start = std::chrono::system_clock::now();
 	for (size_t counter = 0; counter < 1000000; ++counter) c = a + b;

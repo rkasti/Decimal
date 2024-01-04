@@ -147,9 +147,8 @@ Decimal Decimal::operator+(Decimal other) const
 
 Decimal Decimal::operator-(Decimal other) const
 {
-	_val *= -1;
+	other.negate();
 	other += *this;
-	_val *= -1;
 	return other;
 }
 
