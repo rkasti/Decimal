@@ -195,7 +195,7 @@ Decimal& Decimal::operator+=(Decimal other)
 		other._exp -= _exp;
 
 		// test if the comma can be shifted enough to compensate the difference in exponents
-		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp - 1]) {
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
 			other._val *= powers_of_ten[other._exp];
 		}
 		else {
@@ -213,7 +213,7 @@ Decimal& Decimal::operator+=(Decimal other)
 		other._exp = _exp - other._exp;;
 
 		// test if the comma can be shifted enough to compensate the difference in exponents
-		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp - 1]) {
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
 			_val *= powers_of_ten[other._exp];
 			_exp -= other._exp;
 		}
@@ -236,7 +236,7 @@ Decimal& Decimal::operator+=(Decimal other)
 	// value can only overflow to double of DECIMAL_VALUE_MAX -> if overflow, shift the comma by one and increase the exponent by one
 	// only possible because int64_t can represent at least double of DECIMAL_VALUE_MAX
 	// if exponent is already DECIMAL_EXP_MAX, it is gonna be too big -> Error
-	if (DECIMAL_VALUE_MAX > std::abs(_val)) {
+	if (std::abs(_val) > DECIMAL_VALUE_MAX) {
 		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
 		_exp++;
 		uint8_t last_digit = _val % 10;
