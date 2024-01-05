@@ -31,15 +31,15 @@ Decimal::Decimal()
 
 Decimal::Decimal(int64_t value)
 {
-	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow";
+	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow" << std::endl;
 	_exp = 0;
 	_val = value;
 }
 
 Decimal::Decimal(int64_t value, int16_t exp)
 {
-	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow";
-	if (std::abs(exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
+	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow" << std::endl;
+	if (std::abs(exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow" << std::endl;
 	_exp = (value == 0) ? 0 : exp;
 	_val = value;
 }
@@ -58,8 +58,8 @@ void Decimal::set_key(KEY value)
 
 void Decimal::set_value(int64_t value, int16_t exp)
 {
-	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow";
-	if (std::abs(exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
+	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow" << std::endl;
+	if (std::abs(exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow" << std::endl;
 	_exp = (value == 0) ? 0 : exp;
 	_val = value;
 }
@@ -167,14 +167,16 @@ Decimal Decimal::operator/(Decimal other) const
 
 Decimal Decimal::operator%(Decimal other) const
 {
-	other %= *this;
-	return other;
+	Decimal res = *this;
+	res %= other;
+	return res;
 }
 
 Decimal Decimal::operator^(Decimal other) const
 {
-	other ^= *this;
-	return other;
+	Decimal res = *this;
+	res ^= other;
+	return res;
 }
 
 
@@ -189,37 +191,38 @@ Decimal& Decimal::operator+=(Decimal other)
 	if (other._val == 0) return *this;
 
 	// if the exponents are not equal: make them equal by shifting the commas and changing the exponents
+	// this is done by shifting the bigger value to the left until the exponents are equal, if no more
+	// shifting is possible, shift the smaller value to the right until the exponents are equal
 	// other._exp is used to store the difference between the exponents as it is not needed anymore
 	if (other._exp > _exp) {
 		other._exp -= _exp;
 
-		// test if the comma can be shifted enough to compensate the difference in exponents
+		// test if the the bigger value can be shifted enough to the left to compensate the difference in exponents
 		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
 			other._val *= powers_of_ten[other._exp];
 		} else {
-			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
-			other._val *= powers_of_ten[shift];
-			other._exp -= shift;
+			// when it can't be shifted enough, shift it as much as possible and shift the smaller value to the right
+			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
+			other._val *= powers_of_ten[max_shift];
+			other._exp -= max_shift;
 
-			// shift add_val by the remaining difference in exponents to the right
 			if (other._exp > DECIMAL_VALUE_PRECISION) _val = 0;
 			else shift_right(_val, other._exp);
 			_exp += other._exp;
 		}
 	} else if (other._exp < _exp) {
 		other._exp = _exp - other._exp;
-		;
 
-		// test if the comma can be shifted enough to compensate the difference in exponents
+		// test if the the bigger value can be shifted enough to the left to compensate the difference in exponents
 		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
 			_val *= powers_of_ten[other._exp];
 			_exp -= other._exp;
 		} else {
+			// when it can't be shifted enough, shift it as much as possible and shift the smaller value to the right
 			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
 			_val *= powers_of_ten[shift];
 			_exp -= shift;
 
-			// shift add_val by the remaining difference in exponents to the right
 			other._exp -= shift;
 			if (other._exp > DECIMAL_VALUE_PRECISION) other._val = 0;
 			else shift_right(other._val, other._exp);
@@ -234,7 +237,7 @@ Decimal& Decimal::operator+=(Decimal other)
 	// only possible because int64_t can represent at least double of DECIMAL_VALUE_MAX
 	// if exponent is already DECIMAL_EXP_MAX, it is gonna be too big -> Error
 	if (std::abs(_val) > DECIMAL_VALUE_MAX) {
-		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
+		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
 		_exp++;
 		shift_right_one(_val);
 	}
@@ -254,21 +257,21 @@ Decimal& Decimal::operator*=(Decimal other)
 	maximize_exp();
 	other.maximize_exp();
 
+	// test if the value can be multiplied without overflow
 	int64_t test = _val * other._val;
 	if (test / other._val == _val) {
-		// no value overflow
 		_val = test;
 		_exp += other._exp;
 
 		if (std::abs(_val) > DECIMAL_VALUE_MAX) {
-			if (_exp >= DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
 			_exp++;
+			if (std::abs(_exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
 			shift_right_one(_val);
-		} else if (_exp > DECIMAL_EXP_MAX) {
+		} else if (std::abs(_exp) > DECIMAL_EXP_MAX) {
 			// check how many zeros are before _val (when in base 10)
 			uint8_t shift = DECIMAL_EXP_MAX - count_digits(_val);
 			// check if, when shifting _val to the left, the exponent would be still too big
-			if (_exp > DECIMAL_EXP_MAX + shift) std::cout << "Error: Decimal exponent overflow";
+			if (_exp > DECIMAL_EXP_MAX + shift) std::cout << "Error: Decimal overflow" << std::endl;
 			else {
 				shift_right(_val, _exp - DECIMAL_EXP_MAX);
 				_exp = DECIMAL_EXP_MAX;
@@ -277,21 +280,20 @@ Decimal& Decimal::operator*=(Decimal other)
 	} else {
 		if (std::abs(_val) > std::abs(other._val)) std::swap(_val, other._val);
 		uint8_t remove_this;
-		uint8_t remove_other;
+		uint8_t remove_other = 1;
 		int64_t val_lo;
 		int64_t other_val_lo;
 		int64_t abs_val = std::abs(_val);
 		int64_t abs_other_val = std::abs(other._val);
 		if (abs_val < powers_of_ten[9]) {
-			remove_this = 9;
-			val_lo = _val;
-			_val = 0;
+			remove_this = 0;
+			val_lo = 0;
 		} else {
 			remove_this = count_digits(_val) - 9;
 			val_lo = _val % powers_of_ten[remove_this];
 			_val /= powers_of_ten[remove_this];
 		}
-		remove_other = 0;
+		abs_other_val /= 10;
 		abs_val = DECIMAL_VALUE_MAX / abs_val;
 		while (abs_other_val > abs_val) {
 			abs_other_val /= 10;
@@ -304,20 +306,38 @@ Decimal& Decimal::operator*=(Decimal other)
 		//              = (val_lo / 10^remove_this + _val) * (other_val_lo / 10^remove_other + other._val)    when increasing _exp of the result by (remove_this + remove_other)
 		//              = (val_lo * other_val_lo / 10^(remove_this + remove_other)) + (val_lo * other._val / 10^remove_this) + (_val * other_val_lo / 10^remove_other) + (_val * other._val)
 
+		int8_t last_digit = 0;
 		// _val * other._val
 		int64_t res = _val * other._val;
 		// val_lo * other._val / 10^remove_this
-		res += val_lo * other._val / powers_of_ten[remove_this];
+		int64_t part_res = val_lo * other._val;
+		if (remove_this != 0) {
+			part_res /= powers_of_ten[remove_this - 1];
+			last_digit = part_res % 10;
+			part_res /= 10;
+		}
+		res += part_res;
 		// _val * other_val_lo / 10^remove_other
-		res += _val * other_val_lo / powers_of_ten[remove_other];
+		part_res = _val * other_val_lo;
+		part_res /= powers_of_ten[remove_other - 1];
+		last_digit += part_res % 10;
+		res += part_res / 10;
 		// val_lo * other_val_lo / 10^(2*remove)
-		res += val_lo * other_val_lo / powers_of_ten[remove_this += remove_other];
+		part_res = val_lo * other_val_lo;
+		part_res /= powers_of_ten[(remove_this += remove_other) - 1];
+		last_digit += part_res % 10;
+		res += part_res / 10;
+
+		res += last_digit / 10;
+		last_digit %= 10;
+		if (last_digit > 4) res += 1;
+		else if (last_digit < -4) res -= 1;
 
 		_val = res;
 		_exp += remove_this + other._exp;
 
 		// exp can't be decreased anymore because all digits of _val are occupied => Error when Exponent is too big
-		if (std::abs(_exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow";
+		if (std::abs(_exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
 	}
 
 	return *this;
@@ -428,7 +448,7 @@ Decimal& Decimal::root(const Decimal& other)
 Decimal& Decimal::factorial()
 {
 	maximize_exp();
-	if (_exp != 0 || _val < 0 || _val > 3253) std::cout << "Error: Decimal factorial overflow";
+	if (_exp != 0 || _val < 0 || _val > 3253) std::cout << "Error: Decimal overflow" << std::endl;
 	else {
 		Decimal res = _val;
 		_val = 1;
