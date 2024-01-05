@@ -100,7 +100,7 @@ private:
 	/// </summary>
 	static uint8_t count_digits(uint64_t value);
 	/// <summary>
-	/// shifts the value to the right by shift
+	/// shifts the value to the right by shift and rounds the last digit
 	/// </summary>
 	/// <param name="shift">range: 1 to DECIMAL_VALUE_PRECISION (inclusive)</param>
 	static void shift_right(int64_t& value, uint8_t shift);
@@ -109,6 +109,11 @@ private:
 	/// </summary>
 	/// <param name="shift">range: 1 to DECIMAL_VALUE_PRECISION (inclusive)</param>
 	static void shift_right(uint64_t& value, uint8_t shift);
+	/// <summary>
+	/// shifts the value to the right by one and rounds the last digit
+	/// </summary>
+	/// <param name="value"></param>
+	static void shift_right_one(int64_t& value);
 	/// <summary>
 	/// maximize the exponent as much as possible without loosing precision
 	/// </summary>
