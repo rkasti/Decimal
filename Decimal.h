@@ -1,8 +1,8 @@
 #pragma once
 #include <cmath>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #define DECIMAL_VALUE_PRECISION 18
 #define DECIMAL_EXP_PRECISION 4
@@ -18,7 +18,7 @@ using KEY = uint16_t;
 /// </summary>
 class Decimal
 {
-public:
+	public:
 	Decimal();
 	Decimal(int64_t value);
 	Decimal(int64_t value, int16_t exp);
@@ -86,11 +86,11 @@ public:
 
 	std::string to_string() const;
 
-private:
+	private:
 	/// <summary>
 	/// contains all values for 10^n with n from 0 to DECIMAL_VALUE_PRECISION-1
 	/// </summary>
-	static const int64_t powers_of_ten[DECIMAL_VALUE_PRECISION + 1];
+	static const int64_t powers_of_ten[19];
 	/// <summary>
 	/// count the number of digits after the first non-zero digit (base 10)
 	/// </summary>

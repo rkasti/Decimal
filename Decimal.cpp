@@ -485,15 +485,50 @@ void Decimal::shift_right_one(int64_t& value)
 
 uint8_t Decimal::count_digits(int64_t value)
 {
-	uint8_t digits = 1;
-	value = std::abs(value);
-	while (digits < DECIMAL_VALUE_PRECISION && powers_of_ten[digits] <= value) digits++;
-	return digits;
+	count_digits(std::abs(value));
 }
 
 uint8_t Decimal::count_digits(uint64_t value)
 {
-	uint8_t digits = 1;
-	while (digits < DECIMAL_VALUE_PRECISION && powers_of_ten[digits] <= value) digits++;
-	return digits;
+	if (value < powers_of_ten[10]) {
+		if (value < powers_of_ten[5]) {
+			if (value < powers_of_ten[2]) {
+				if (value == 0) return 0;
+				if (value < powers_of_ten[1]) return 1;
+				else return 2;
+			} else {
+				if (value < powers_of_ten[3]) return 3;
+				else return 4;
+			}
+		} else {
+			if (value < powers_of_ten[7]) {
+				if (value < powers_of_ten[5]) return 5;
+				if (value < powers_of_ten[6]) return 6;
+				else return 7;
+			} else {
+				if (value < powers_of_ten[8]) return 8;
+				else return 9;
+			}
+		}
+	} else {
+		if (value < powers_of_ten[15]) {
+			if (value < powers_of_ten[12]) {
+				if (value < powers_of_ten[10]) return 10;
+				if (value < powers_of_ten[11]) return 11;
+				else return 12;
+			} else {
+				if (value < powers_of_ten[13]) return 13;
+				else return 14;
+			}
+		} else {
+			if (value < powers_of_ten[17]) {
+				if (value < powers_of_ten[15]) return 15;
+				if (value < powers_of_ten[16]) return 16;
+				else return 17;
+			} else {
+				if (value < powers_of_ten[18]) return 18;
+				else return 19;
+			}
+		}
+	}
 }
