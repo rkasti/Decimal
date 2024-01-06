@@ -254,6 +254,8 @@ Decimal& Decimal::operator-=(Decimal other)
 
 Decimal& Decimal::operator*=(Decimal other)
 {
+	// a * 10^b * c * 10^d = a * c * 10^(b + d)
+	// => multiply values and add exponents
 	maximize_exp();
 	other.maximize_exp();
 
@@ -279,6 +281,7 @@ Decimal& Decimal::operator*=(Decimal other)
 			}
 		}
 	} else {
+		// split each value into two parts so that no part has more than 9 digits => no multiplication between two parts can have more than 18 digits
 		int64_t val_lo = _val % powers_of_ten[9];
 		_val /= powers_of_ten[9];
 		int64_t other_val_lo = other._val % powers_of_ten[9];
@@ -290,6 +293,7 @@ Decimal& Decimal::operator*=(Decimal other)
 		// = (val_lo * other_val_lo / 10^18) + (val_lo * other._val / 10^9) + (_val * other_val_lo / 10^9) + (_val * other._val)
 		// = (_val * other._val) + ((_val * other_val_lo + val_lo * other._val) / 10^9) + (val_lo * other_val_lo / 10^18)
 		// = (_val * other._val * 10^shift) + ((_val * other_val_lo + val_lo * other._val) * 10^(shift - 9)) + (val_lo * other_val_lo / 10^(18 - shift))   when decreasing _exp of the result by shift
+		// the result of the first multiplication is shifted to the left as much as possible for maximum precision, shift is the number of digits it was shifted
 
 		int8_t last_digit = 0;
 		int64_t part_res;
@@ -311,7 +315,7 @@ Decimal& Decimal::operator*=(Decimal other)
 		last_digit += part_res % 10;
 		res += part_res / 10;
 
-		// round the last digit
+		// round the last digit, note that it can have more than one digit
 		res += last_digit / 10;
 		last_digit %= 10;
 		if (last_digit > 4) res += 1;
@@ -485,10 +489,10 @@ void Decimal::shift_right_one(int64_t& value)
 
 uint8_t Decimal::count_digits(int64_t value)
 {
-	count_digits(std::abs(value));
+	return count_digits_unsigned(std::abs(value));
 }
 
-uint8_t Decimal::count_digits(uint64_t value)
+uint8_t Decimal::count_digits_unsigned(uint64_t value)
 {
 	if (value < powers_of_ten[10]) {
 		if (value < powers_of_ten[5]) {

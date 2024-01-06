@@ -98,7 +98,7 @@ class Decimal
 	/// <summary>
 	/// count the number of digits after the first non-zero digit (base 10)
 	/// </summary>
-	static uint8_t count_digits(uint64_t value);
+	static uint8_t count_digits_unsigned(uint64_t value);
 	/// <summary>
 	/// shifts the value to the right by shift and rounds the last digit
 	/// </summary>
