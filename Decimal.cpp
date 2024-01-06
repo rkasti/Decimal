@@ -295,19 +295,27 @@ Decimal& Decimal::operator*=(Decimal other)
 		// = (_val * other._val * 10^shift) + ((_val * other_val_lo + val_lo * other._val) * 10^(shift - 9)) + (val_lo * other_val_lo / 10^(18 - shift))   when decreasing _exp of the result by shift
 		// the result of the first multiplication is shifted to the left as much as possible for maximum precision, shift is the number of digits it was shifted
 
+		uint8_t shift;
 		int8_t last_digit = 0;
 		int64_t part_res;
 		// _val * other._val * 10^shift
 		int64_t res = _val * other._val;
-		uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(res);
-		res *= powers_of_ten[shift];
 		// (_val * other_val_lo + val_lo * other._val) / 10^(9 - shift)
-		if (shift >= 9) res += (val_lo * other._val + _val * other_val_lo) * powers_of_ten[shift - 9];
-		else {
-			part_res = val_lo * other._val + _val * other_val_lo;
-			part_res /= powers_of_ten[8 - shift];
-			last_digit = part_res % 10;
-			res += part_res / 10;
+		if (res == 0) {
+			res = val_lo * other._val + _val * other_val_lo;
+			shift = DECIMAL_VALUE_PRECISION - count_digits(res);
+			res *= powers_of_ten[shift];
+			shift += 9;
+		} else {
+			shift = DECIMAL_VALUE_PRECISION - count_digits(res);
+			res *= powers_of_ten[shift];
+			if (shift >= 9) res += (val_lo * other._val + _val * other_val_lo) * powers_of_ten[shift - 9];
+			else {
+				part_res = val_lo * other._val + _val * other_val_lo;
+				part_res /= powers_of_ten[8 - shift];
+				last_digit = part_res % 10;
+				res += part_res / 10;
+			}
 		}
 		// val_lo * other_val_lo / 10^(18 - shift)
 		part_res = val_lo * other_val_lo;
@@ -452,10 +460,11 @@ Decimal& Decimal::root(const Decimal& other)
 Decimal& Decimal::factorial()
 {
 	maximize_exp();
-	if (_exp != 0 || _val < 0 || _val > 3253) std::cout << "Error: Decimal overflow" << std::endl;
+	if (_exp > 3 || _val < 0 || (_val *= powers_of_ten[_exp]) > 3253) std::cout << "Error: Decimal overflow" << std::endl;
 	else {
 		Decimal res = _val;
 		_val = 1;
+		_exp = 0;
 		for (; res._val > 1; res._val--)
 			operator*=(res);
 	}
@@ -518,36 +527,37 @@ uint8_t Decimal::count_digits_unsigned(uint64_t value)
 				else return 2;
 			} else {
 				if (value < powers_of_ten[3]) return 3;
-				else return 4;
+				if (value < powers_of_ten[4]) return 4;
+				else return 5;
 			}
 		} else {
 			if (value < powers_of_ten[7]) {
-				if (value < powers_of_ten[5]) return 5;
 				if (value < powers_of_ten[6]) return 6;
 				else return 7;
 			} else {
 				if (value < powers_of_ten[8]) return 8;
-				else return 9;
+				if (value < powers_of_ten[9]) return 9;
+				else return 10;
 			}
 		}
 	} else {
 		if (value < powers_of_ten[15]) {
 			if (value < powers_of_ten[12]) {
-				if (value < powers_of_ten[10]) return 10;
 				if (value < powers_of_ten[11]) return 11;
 				else return 12;
 			} else {
 				if (value < powers_of_ten[13]) return 13;
-				else return 14;
+				if (value < powers_of_ten[14]) return 14;
+				else return 15;
 			}
 		} else {
 			if (value < powers_of_ten[17]) {
-				if (value < powers_of_ten[15]) return 15;
 				if (value < powers_of_ten[16]) return 16;
 				else return 17;
 			} else {
 				if (value < powers_of_ten[18]) return 18;
-				else return 19;
+				if (value < powers_of_ten[19]) return 19;
+				else return 20;
 			}
 		}
 	}
