@@ -8,11 +8,10 @@
 #include <vector>
 
 
-// 200 / 770 cycles on average
 int main()
 {
-	Decimal a(121212121212, 0);
-	Decimal b(121212121212, 0);
+	Decimal a(23, 0);
+	Decimal b(45, 0);
 	Decimal c;
 	// c = a * b;
 	// std::cout << c.to_string() << std::endl;
