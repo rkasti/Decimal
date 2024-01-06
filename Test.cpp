@@ -8,7 +8,7 @@
 #include <vector>
 
 
-// 770 cycles on average
+// 200 / 770 cycles on average
 int main()
 {
 	Decimal a(121212121212, 0);
