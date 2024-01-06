@@ -333,17 +333,29 @@ Decimal& Decimal::operator*=(Decimal other)
 
 Decimal& Decimal::operator/=(Decimal other)
 {
+	if (other._val == 0) std::cout << "Error: Division by zero" << std::endl;
+
+	// if other._val has more than 17 digits, the code below could get stuck in an infinite loop as the result of the division could be 0
+	if (other._val >= powers_of_ten[17]) {
+		shift_right_one(other._val);
+		other._exp++;
+	}
+
 	// not used yet
 	bool exact = false;
 
+	// res stores the result, every step it is shifted to the left, until all 18 digits are occupied
 	int64_t res = _val / other._val;
 	_val %= other._val;
 	if (_val != 0) {
 		while (true) {
-			int64_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
+			// shift the remainder _val to the left as much as possible and store the amount of digits it was shifted
+			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
 			_val *= powers_of_ten[shift];
+			// divide the shifted remainder _val by the other value and add the result to div, set _val to the remainder
 			int64_t div = _val / other._val;
 			_val %= other._val;
+			// try shifting the result to the left by shift, if it is not possible, shift it as much as possible and break the loop
 			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(res);
 			if (shift > max_shift) {
 				if (_val == 0 && div % powers_of_ten[shift - max_shift] == 0) exact = true;
@@ -353,17 +365,21 @@ Decimal& Decimal::operator/=(Decimal other)
 				_exp -= max_shift;
 				break;
 			}
+			// if shift is not too big, shift the result to the left by shift and add div
 			res *= powers_of_ten[shift];
 			res += div;
+			// decrease the exponent by shift
 			_exp -= shift;
+			// if the remainder is zero, the result is exact, break the loop
 			if (_val == 0) {
 				exact = true;
 				break;
 			}
-			if (shift == max_shift) break;
 		}
 	}
 
+	// set _val to the result and increase the exponent by the exponent of the other value because
+	// a * 10^b / c * 10^d = a / c * 10^(b - d)
 	_val = res;
 	_exp -= other._exp;
 
