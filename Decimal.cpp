@@ -263,6 +263,7 @@ Decimal& Decimal::operator*=(Decimal other)
 		_val = test;
 		_exp += other._exp;
 
+		// value can still be bigger than DECIMAL_VALUE_MAX -> shift the value to the left by one and increase the exponent by one
 		if (std::abs(_val) > DECIMAL_VALUE_MAX) {
 			_exp++;
 			if (std::abs(_exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
@@ -270,7 +271,7 @@ Decimal& Decimal::operator*=(Decimal other)
 		} else if (std::abs(_exp) > DECIMAL_EXP_MAX) {
 			// check how many zeros are before _val (when in base 10)
 			uint8_t shift = DECIMAL_EXP_MAX - count_digits(_val);
-			// check if, when shifting _val to the left, the exponent would be still too big
+			// check if, when shifting the value to the left, the exponent would be still too big
 			if (_exp > DECIMAL_EXP_MAX + shift) std::cout << "Error: Decimal overflow" << std::endl;
 			else {
 				shift_right(_val, _exp - DECIMAL_EXP_MAX);
@@ -302,9 +303,10 @@ Decimal& Decimal::operator*=(Decimal other)
 		other_val_lo = other._val % powers_of_ten[remove_other];
 		other._val /= powers_of_ten[remove_other];
 
-		// this * other = (val_lo + _val * 10^remove_this) * (other_val_lo + other._val * 10^remove_other)
-		//              = (val_lo / 10^remove_this + _val) * (other_val_lo / 10^remove_other + other._val)    when increasing _exp of the result by (remove_this + remove_other)
-		//              = (val_lo * other_val_lo / 10^(remove_this + remove_other)) + (val_lo * other._val / 10^remove_this) + (_val * other_val_lo / 10^remove_other) + (_val * other._val)
+		// this * other
+		// = (val_lo + _val * 10^remove_this) * (other_val_lo + other._val * 10^remove_other)
+		// = (val_lo / 10^remove_this + _val) * (other_val_lo / 10^remove_other + other._val)    when increasing _exp of the result by (remove_this + remove_other)
+		// = (val_lo * other_val_lo / 10^(remove_this + remove_other)) + (val_lo * other._val / 10^remove_this) + (_val * other_val_lo / 10^remove_other) + (_val * other._val)
 
 		int8_t last_digit = 0;
 		// _val * other._val
