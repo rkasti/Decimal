@@ -56,9 +56,15 @@ class Decimal
 	Decimal& operator%=(Decimal other);
 	Decimal& operator^=(Decimal other);
 
-	Decimal& log();
-	Decimal& log(const Decimal& other);
 	Decimal& ln();
+	Decimal& log10();
+	Decimal& log(const Decimal& other);
+	Decimal& exp();
+	Decimal& pow10();
+	Decimal& pow(const Decimal& other);
+	Decimal& sqrt();
+	Decimal& root(const Decimal& other);
+	Decimal& factorial();
 
 	Decimal& sin();
 	Decimal& cos();
@@ -79,10 +85,6 @@ class Decimal
 	Decimal& to_int();
 	Decimal& abs();
 	Decimal& negate();
-
-	Decimal& pow(const Decimal& other);
-	Decimal& root(const Decimal& other);
-	Decimal& factorial();
 
 	std::string to_string() const;
 

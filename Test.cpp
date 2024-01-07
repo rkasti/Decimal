@@ -12,9 +12,9 @@
 int main()
 {
 	Decimal a(121212121212, 0);
-	Decimal b(700, 0);
+	Decimal b(999999999999999999, -19);
 	Decimal c;
-	c = b.factorial();
+	c = b.round();
 	std::cout << c.to_string() << std::endl;
 	// auto start = std::chrono::system_clock::now();
 	// for (size_t counter = 0; counter < 1000000; ++counter) {

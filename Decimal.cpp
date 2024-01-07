@@ -415,39 +415,37 @@ Decimal& Decimal::operator^=(Decimal other)
 	return *this;
 }
 
-Decimal& Decimal::round()
+Decimal& Decimal::ln()
 {
 	return *this;
 }
 
-Decimal& Decimal::floor()
+Decimal& Decimal::log10()
 {
 	return *this;
 }
 
-Decimal& Decimal::ceil()
+Decimal& Decimal::log(const Decimal& other)
 {
 	return *this;
 }
 
-Decimal& Decimal::to_int()
+Decimal& Decimal::exp()
 {
 	return *this;
 }
 
-Decimal& Decimal::abs()
+Decimal& Decimal::pow10()
 {
-	_val = std::abs(_val);
-	return *this;
-}
-
-Decimal& Decimal::negate()
-{
-	_val *= -1;
 	return *this;
 }
 
 Decimal& Decimal::pow(const Decimal& other)
+{
+	return *this;
+}
+
+Decimal& Decimal::sqrt()
 {
 	return *this;
 }
@@ -468,6 +466,76 @@ Decimal& Decimal::factorial()
 		for (; res._val > 1; res._val--)
 			operator*=(res);
 	}
+	return *this;
+}
+
+Decimal& Decimal::round()
+{
+	if (_exp < 0) {
+		if (_exp > DECIMAL_VALUE_PRECISION) {
+			_val = 0;
+			_exp = 0;
+		} else {
+			shift_right(_val, -_exp);
+			_exp = 0;
+		}
+	}
+	return *this;
+}
+
+Decimal& Decimal::floor()
+{
+	if (_exp < 0) {
+		if (-_exp > DECIMAL_VALUE_PRECISION) {
+			_val = 0;
+			_exp = 0;
+		} else {
+			_val /= powers_of_ten[-_exp];
+			if (_val < 0) _val--;
+			_exp = 0;
+		}
+	}
+	return *this;
+}
+
+Decimal& Decimal::ceil()
+{
+	if (_exp < 0) {
+		if (-_exp > DECIMAL_VALUE_PRECISION) {
+			_val = 0;
+			_exp = 0;
+		} else {
+			_val /= powers_of_ten[-_exp];
+			if (_val > 0) _val++;
+			_exp = 0;
+		}
+	}
+	return *this;
+}
+
+Decimal& Decimal::to_int()
+{
+	if (_exp < 0) {
+		if (-_exp > DECIMAL_VALUE_PRECISION) {
+			_val = 0;
+			_exp = 0;
+		} else {
+			_val /= powers_of_ten[-_exp];
+			_exp = 0;
+		}
+	}
+	return *this;
+}
+
+Decimal& Decimal::abs()
+{
+	_val = std::abs(_val);
+	return *this;
+}
+
+Decimal& Decimal::negate()
+{
+	_val *= -1;
 	return *this;
 }
 
