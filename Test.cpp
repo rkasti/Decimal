@@ -6,9 +6,9 @@
 
 int main()
 {
-	Decimal a(-456, 3);
+	Decimal a(18, 3);
 	Decimal b(6, 4);
 	Decimal c;
-	c = a % b;
+	c = a * b;
 	std::cout << c.to_string() << std::endl;
 }
