@@ -6,14 +6,14 @@ That leads to a lot higher accuracy, as most values of the form a*10^b can't be 
 
 # Features:
 ## Done:
--Addition
--Subtraction
--Multiplication
--Division
--Modulo
+- Addition
+- Subtraction
+- Multiplication
+- Division
+- Modulo
 
 ## In progress:
--Trigonometric functions
--Power
--Log
--Root
+- Trigonometric functions
+- Power
+- Log
+- Root
