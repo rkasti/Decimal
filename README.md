@@ -11,6 +11,11 @@ That leads to a lot higher accuracy, as most values of the form a*10^b can't be 
 - Multiplication
 - Division
 - Modulo
+- Factorial
+- Round / Floor / Ceil
+- To int
+- Negate
+- Abs
 
 ## In progress:
 - Trigonometric functions
