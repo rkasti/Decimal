@@ -11,10 +11,10 @@
 // 200 / 770 cycles on average
 int main()
 {
-	Decimal a(121212121212, 0);
-	Decimal b(999999999999999999, -19);
+	Decimal a(-456, 3);
+	Decimal b(6, 4);
 	Decimal c;
-	c = b.round();
+	c = a % b;
 	std::cout << c.to_string() << std::endl;
 	// auto start = std::chrono::system_clock::now();
 	// for (size_t counter = 0; counter < 1000000; ++counter) {

@@ -396,7 +396,6 @@ Decimal& Decimal::operator/=(Decimal other)
 
 Decimal& Decimal::operator%=(Decimal other)
 {
-	if (operator<(other)) return *this;
 	maximize_exp();
 	other.maximize_exp();
 	if (_val == other._val && _exp == other._exp) {
@@ -405,8 +404,21 @@ Decimal& Decimal::operator%=(Decimal other)
 		return *this;
 	}
 
+	// make the exponents equal, if digits would be lost, mod does not make sense => Error
+	if (other._exp > _exp) {
+		other._exp -= _exp;
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
+			other._val *= powers_of_ten[other._exp];
+		} else std::cout << "Error: Decimal overflow" << std::endl;
+	} else if (other._exp < _exp) {
+		other._exp = _exp - other._exp;
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
+			_val *= powers_of_ten[other._exp];
+			_exp -= other._exp;
+		} else std::cout << "Error: Decimal overflow" << std::endl;
+	}
 
-	_exp = other._exp;
+	_val %= other._val;
 	return *this;
 }
 
@@ -417,6 +429,7 @@ Decimal& Decimal::operator^=(Decimal other)
 
 Decimal& Decimal::ln()
 {
+	const Decimal ln10(230258509299404568, -17);
 	return *this;
 }
 
@@ -624,8 +637,7 @@ uint8_t Decimal::count_digits_unsigned(uint64_t value)
 				else return 17;
 			} else {
 				if (value < powers_of_ten[18]) return 18;
-				if (value < powers_of_ten[19]) return 19;
-				else return 20;
+				else return 19;
 			}
 		}
 	}
