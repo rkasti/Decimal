@@ -51,23 +51,12 @@ Decimal::Decimal(const Decimal& other)
 }
 
 
-void Decimal::set_key(KEY value)
-{
-	_exp = value;
-}
-
-void Decimal::set_value(int64_t value, int16_t exp)
+void Decimal::set(int64_t value, int16_t exp)
 {
 	if (std::abs(value) > DECIMAL_VALUE_MAX) std::cout << "Error: Decimal value overflow" << std::endl;
 	if (std::abs(exp) > DECIMAL_EXP_MAX) std::cout << "Error: Decimal exponent overflow" << std::endl;
 	_exp = (value == 0) ? 0 : exp;
 	_val = value;
-}
-
-
-KEY Decimal::get_key() const
-{
-	return (KEY)_exp;
 }
 
 int64_t Decimal::get_value() const

@@ -10,11 +10,8 @@
 #define DECIMAL_VALUE_MAX 999999999999999999
 #define DECIMAL_EXP_MAX 9999
 
-using KEY = uint16_t;
-
 /// <summary>
-/// stores either a KEY or a decimal: value = _val * 10 ^ _exp<para/>
-/// IMPORTANT: don't use any operations if the decimal represents a KEY
+/// stores either a decimal of the form: value = _val * 10 ^ _exp<para/>
 /// </summary>
 class Decimal
 {
@@ -24,10 +21,7 @@ class Decimal
 	Decimal(int64_t value, int16_t exp);
 	Decimal(const Decimal& other);
 
-	void set_key(KEY value);
-	void set_value(int64_t value, int16_t exp);
-
-	KEY get_key() const;
+	void set(int64_t value, int16_t exp);
 	int64_t get_value() const;
 	int16_t get_exp() const;
 
