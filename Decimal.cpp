@@ -427,52 +427,6 @@ Decimal& Decimal::operator^=(Decimal other)
 	return *this;
 }
 
-bool Decimal::add_changed(Decimal other)
-{
-	if (_val == 0) {
-		_val = other._val;
-		_exp = other._exp;
-		return true;
-	}
-	if (other._val == 0) return false;
-
-	if (other._exp > _exp) {
-		other._exp -= _exp;
-		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
-			other._val *= powers_of_ten[other._exp];
-		} else {
-			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
-			other._val *= powers_of_ten[max_shift];
-			other._exp -= max_shift;
-
-			if (other._exp > DECIMAL_VALUE_PRECISION) _val = 0;
-			else shift_right(_val, other._exp);
-			_exp += other._exp;
-		}
-	} else if (other._exp < _exp) {
-		other._exp = _exp - other._exp;
-		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
-			_val *= powers_of_ten[other._exp];
-			_exp -= other._exp;
-		} else {
-			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
-			_val *= powers_of_ten[shift];
-			_exp -= shift;
-
-			other._exp -= shift;
-			if (other._exp > DECIMAL_VALUE_PRECISION) return false;
-			else shift_right(other._val, other._exp);
-		}
-	}
-	_val += other._val;
-	if (std::abs(_val) > DECIMAL_VALUE_MAX) {
-		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
-		_exp++;
-		shift_right_one(_val);
-	}
-	return true;
-}
-
 Decimal& Decimal::ln()
 {
 	// TODO: make this slightly bigger than 1
@@ -482,15 +436,16 @@ Decimal& Decimal::ln()
 		return *this;
 	}
 
+	// TODO: store error (Khan sum)
+
 	uint8_t exp = count_digits(_val) - 1;
 	Decimal y = Decimal(_val - powers_of_ten[exp]) / Decimal(_val + powers_of_ten[exp]);
 	exp += _exp;
 	Decimal top = y;
 	operator=(y);
 	y *= y;
-	uint8_t i;
-	for (i = 3; add_changed((top *= y) / i); i += 2) {}
-	std::cout << unsigned(i) << std::endl;
+
+	for (uint8_t i = 3; add_changed((top *= y) / i); i += 2) {}
 	operator*=(2);
 	operator+=(Decimal(exp) * LN10);
 }
@@ -505,13 +460,15 @@ Decimal& Decimal::log(Decimal other)
 
 Decimal& Decimal::exp()
 {
-	// wolfram alpha:
-	// e^(a 10^b) = sum_(k=0)^(infinity) (10^b a)^k/(k!)
+	// if value is too big, throw error
 	if (operator>(Decimal(234172903957494446, -14))) {
 		std::cout << "Error: Decimal overflow" << std::endl;
 		return *this;
 	}
+	// TODO: store error (Khan sum)
 
+	// wolfram alpha:
+	// e^(a 10^b) = sum_(k=0)^(infinity) (10^b a)^k/(k!)
 	Decimal fact = 1;
 	Decimal mult = *this;
 	Decimal denom = 1;
@@ -634,6 +591,53 @@ void Decimal::maximize_exp() const
 		_exp++;
 	}
 }
+
+bool Decimal::add_changed(Decimal other)
+{
+	if (_val == 0) {
+		_val = other._val;
+		_exp = other._exp;
+		return true;
+	}
+	if (other._val == 0) return false;
+
+	if (other._exp > _exp) {
+		other._exp -= _exp;
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
+			other._val *= powers_of_ten[other._exp];
+		} else {
+			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
+			other._val *= powers_of_ten[max_shift];
+			other._exp -= max_shift;
+
+			if (other._exp > DECIMAL_VALUE_PRECISION) _val = 0;
+			else shift_right(_val, other._exp);
+			_exp += other._exp;
+		}
+	} else if (other._exp < _exp) {
+		other._exp = _exp - other._exp;
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
+			_val *= powers_of_ten[other._exp];
+			_exp -= other._exp;
+		} else {
+			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
+			_val *= powers_of_ten[shift];
+			_exp -= shift;
+
+			other._exp -= shift;
+			if (other._exp > DECIMAL_VALUE_PRECISION) return false;
+			else shift_right(other._val, other._exp);
+		}
+	}
+	_val += other._val;
+	if (std::abs(_val) > DECIMAL_VALUE_MAX) {
+		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
+		_exp++;
+		shift_right_one(_val);
+	}
+	return true;
+}
+
 
 void Decimal::shift_right(int64_t& value, uint8_t shift)
 {

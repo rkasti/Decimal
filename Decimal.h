@@ -50,8 +50,6 @@ class Decimal
 	Decimal& operator%=(Decimal other);
 	Decimal& operator^=(Decimal other);
 
-	bool add_changed(Decimal other);
-
 	Decimal& ln();
 	Decimal& log(Decimal other);
 	Decimal& exp();
@@ -128,6 +126,10 @@ class Decimal
 	/// maximize the exponent as much as possible without loosing precision
 	/// </summary>
 	void maximize_exp() const;
+	/// <summary>
+	/// add other to this while adding the next digit to error if necessary and returning whether the value or error changed
+	/// </summary>
+	bool add_changed(Decimal other);
 
 	/// <summary>
 	/// value of the decimal: value = _val * 10^_exp
