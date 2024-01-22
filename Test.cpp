@@ -12,7 +12,8 @@ int main()
 	//	c.exp();
 	//	std::cout << c.to_string() << std::endl;
 	// }
-	Decimal a = Decimal(2340, 0);
-	a.exp();
+	Decimal a = Decimal(1333418256, 0);
+	Decimal b = Decimal(3, 0);
+	a.root(5);
 	std::cout << a.to_string() << std::endl;
 }

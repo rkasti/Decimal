@@ -50,6 +50,8 @@ class Decimal
 	Decimal& operator%=(Decimal other);
 	Decimal& operator^=(Decimal other);
 
+	bool add_changed(Decimal other);
+
 	Decimal& ln();
 	Decimal& log(Decimal other);
 	Decimal& exp();

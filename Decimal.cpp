@@ -340,16 +340,16 @@ Decimal& Decimal::operator*=(Decimal other)
 
 Decimal& Decimal::operator/=(Decimal other)
 {
-	if (other._val == 0) std::cout << "Error: Division by zero" << std::endl;
+	if (other._val == 0) {
+		std::cout << "Error: Division by zero" << std::endl;
+		return *this;
+	}
 
 	// if other._val has more than 17 digits, the code below could get stuck in an infinite loop as the result of the division could be 0
 	if (other._val >= powers_of_ten[17]) {
 		shift_right_one(other._val);
 		other._exp++;
 	}
-
-	// not used yet
-	bool exact = false;
 
 	// res stores the result, every step it is shifted to the left, until all 18 digits are occupied
 	int64_t res = _val / other._val;
@@ -365,7 +365,6 @@ Decimal& Decimal::operator/=(Decimal other)
 			// try shifting the result to the left by shift, if it is not possible, shift it as much as possible and break the loop
 			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(res);
 			if (shift > max_shift) {
-				if (_val == 0 && div % powers_of_ten[shift - max_shift] == 0) exact = true;
 				shift_right(div, shift - max_shift);
 				res *= powers_of_ten[max_shift];
 				res += div;
@@ -378,10 +377,7 @@ Decimal& Decimal::operator/=(Decimal other)
 			// decrease the exponent by shift
 			_exp -= shift;
 			// if the remainder is zero, the result is exact, break the loop
-			if (_val == 0) {
-				exact = true;
-				break;
-			}
+			if (_val == 0) break;
 		}
 	}
 
@@ -426,7 +422,55 @@ Decimal& Decimal::operator^=(Decimal other)
 	ln();
 	operator*=(other);
 	exp();
+	shift_right(_val, 2);
+	_exp += 2;
 	return *this;
+}
+
+bool Decimal::add_changed(Decimal other)
+{
+	if (_val == 0) {
+		_val = other._val;
+		_exp = other._exp;
+		return true;
+	}
+	if (other._val == 0) return false;
+
+	if (other._exp > _exp) {
+		other._exp -= _exp;
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(other._val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
+			other._val *= powers_of_ten[other._exp];
+		} else {
+			uint8_t max_shift = DECIMAL_VALUE_PRECISION - count_digits(other._val);
+			other._val *= powers_of_ten[max_shift];
+			other._exp -= max_shift;
+
+			if (other._exp > DECIMAL_VALUE_PRECISION) _val = 0;
+			else shift_right(_val, other._exp);
+			_exp += other._exp;
+		}
+	} else if (other._exp < _exp) {
+		other._exp = _exp - other._exp;
+		if (other._exp < DECIMAL_VALUE_PRECISION && std::abs(_val) < powers_of_ten[DECIMAL_VALUE_PRECISION - other._exp]) {
+			_val *= powers_of_ten[other._exp];
+			_exp -= other._exp;
+		} else {
+			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
+			_val *= powers_of_ten[shift];
+			_exp -= shift;
+
+			other._exp -= shift;
+			if (other._exp > DECIMAL_VALUE_PRECISION) return false;
+			else shift_right(other._val, other._exp);
+		}
+	}
+	_val += other._val;
+	if (std::abs(_val) > DECIMAL_VALUE_MAX) {
+		if (_exp == DECIMAL_EXP_MAX) std::cout << "Error: Decimal overflow" << std::endl;
+		_exp++;
+		shift_right_one(_val);
+	}
+	return true;
 }
 
 Decimal& Decimal::ln()
@@ -444,13 +488,8 @@ Decimal& Decimal::ln()
 	Decimal top = y;
 	operator=(y);
 	y *= y;
-	Decimal fract = 1;
 	uint8_t i;
-	for (i = 3; fract._val != 0 && fract._exp + count_digits(fract._val) > -18; i += 2) {
-		top *= y;
-		fract = top / i;
-		operator+=(fract);
-	}
+	for (i = 3; add_changed((top *= y) / i); i += 2) {}
 	std::cout << unsigned(i) << std::endl;
 	operator*=(2);
 	operator+=(Decimal(exp) * LN10);
@@ -466,27 +505,20 @@ Decimal& Decimal::log(Decimal other)
 
 Decimal& Decimal::exp()
 {
+	// wolfram alpha:
+	// e^(a 10^b) = sum_(k=0)^(infinity) (10^b a)^k/(k!)
 	if (operator>(Decimal(234172903957494446, -14))) {
 		std::cout << "Error: Decimal overflow" << std::endl;
 		return *this;
 	}
 
-
 	Decimal fact = 1;
 	Decimal mult = *this;
 	Decimal denom = 1;
-	Decimal fract = 1;
 	_val = 1;
 	_exp = 0;
 
-	uint16_t i;
-	for (i = 1; fract._val != 0 && fract._exp + count_digits(fract._val) > -18; i++) {
-		fact *= i;
-		denom *= mult;
-		fract = denom / fact;
-		operator+=(fract);
-	}
-	std::cout << unsigned(i) << std::endl;
+	for (uint16_t i = 1; add_changed((denom *= mult) / (fact *= i)); i++) {}
 	return *this;
 }
 
