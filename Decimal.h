@@ -51,13 +51,10 @@ class Decimal
 	Decimal& operator^=(Decimal other);
 
 	Decimal& ln();
-	Decimal& log10();
-	Decimal& log(const Decimal& other);
+	Decimal& log(Decimal other);
 	Decimal& exp();
-	Decimal& pow10();
-	Decimal& pow(const Decimal& other);
 	Decimal& sqrt();
-	Decimal& root(const Decimal& other);
+	Decimal& root(Decimal other);
 	Decimal& factorial();
 
 	Decimal& sin();
@@ -79,14 +76,29 @@ class Decimal
 	Decimal& to_int();
 	Decimal& abs();
 	Decimal& negate();
+	Decimal& ran();
+	Decimal& ran_int(Decimal start, Decimal end);
 
 	std::string to_string() const;
 
-	private:
+	/// <summary>
+	/// approximation of pi
+	/// </summary>
+	static const Decimal PI;
+	/// <summary>
+	/// approximation of e
+	/// </summary>
+	static const Decimal EULER;
+	/// <summary>
+	/// approximation of ln(10)
+	/// </summary>
+	static const Decimal LN10;
 	/// <summary>
 	/// contains all values for 10^n with n from 0 to DECIMAL_VALUE_PRECISION-1
 	/// </summary>
 	static const int64_t powers_of_ten[19];
+
+	private:
 	/// <summary>
 	/// count the number of digits after the first non-zero digit (base 10)
 	/// </summary>

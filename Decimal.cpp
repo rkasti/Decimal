@@ -22,6 +22,10 @@ const int64_t Decimal::powers_of_ten[] = {
 	1000000000000000000
 };
 
+const Decimal Decimal::PI(314159265358979324, -17);
+const Decimal Decimal::EULER(271828182845904524, -17);
+const Decimal Decimal::LN10(230258509299404568, -17);
+
 
 Decimal::Decimal()
 {
@@ -248,6 +252,12 @@ Decimal& Decimal::operator*=(Decimal other)
 	maximize_exp();
 	other.maximize_exp();
 
+	if (_val == 0 || other._val == 0) {
+		_val = 0;
+		_exp = 0;
+		return *this;
+	}
+
 	// test if the value can be multiplied without overflow
 	int64_t test = _val * other._val;
 	if (test / other._val == _val) {
@@ -261,7 +271,7 @@ Decimal& Decimal::operator*=(Decimal other)
 			shift_right_one(_val);
 		} else if (std::abs(_exp) > DECIMAL_EXP_MAX) {
 			// check how many zeros are before _val (when in base 10)
-			uint8_t shift = DECIMAL_EXP_MAX - count_digits(_val);
+			uint8_t shift = DECIMAL_VALUE_PRECISION - count_digits(_val);
 			// check if, when shifting the value to the left, the exponent would be still too big
 			if (_exp > DECIMAL_EXP_MAX + shift) std::cout << "Error: Decimal overflow" << std::endl;
 			else {
@@ -413,47 +423,82 @@ Decimal& Decimal::operator%=(Decimal other)
 
 Decimal& Decimal::operator^=(Decimal other)
 {
+	ln();
+	operator*=(other);
+	exp();
 	return *this;
 }
 
 Decimal& Decimal::ln()
 {
-	const Decimal ln10(230258509299404568, -17);
-	return *this;
+	// TODO: make this slightly bigger than 1
+	// https://math.stackexchange.com/questions/977586/is-there-an-approximation-to-the-natural-log-function-at-large-values/977836#977836
+	if (_val <= 0) {
+		std::cout << "Error: Logarithm of a negative number" << std::endl;
+		return *this;
+	}
+
+	uint8_t exp = count_digits(_val) - 1;
+	Decimal y = Decimal(_val - powers_of_ten[exp]) / Decimal(_val + powers_of_ten[exp]);
+	exp += _exp;
+	Decimal top = y;
+	operator=(y);
+	y *= y;
+	Decimal fract = 1;
+	uint8_t i;
+	for (i = 3; fract._val != 0 && fract._exp + count_digits(fract._val) > -18; i += 2) {
+		top *= y;
+		fract = top / i;
+		operator+=(fract);
+	}
+	std::cout << unsigned(i) << std::endl;
+	operator*=(2);
+	operator+=(Decimal(exp) * LN10);
 }
 
-Decimal& Decimal::log10()
+Decimal& Decimal::log(Decimal other)
 {
-	return *this;
-}
-
-Decimal& Decimal::log(const Decimal& other)
-{
+	ln();
+	other.ln();
+	operator/=(other);
 	return *this;
 }
 
 Decimal& Decimal::exp()
 {
-	return *this;
-}
+	if (operator>(Decimal(234172903957494446, -14))) {
+		std::cout << "Error: Decimal overflow" << std::endl;
+		return *this;
+	}
 
-Decimal& Decimal::pow10()
-{
-	return *this;
-}
 
-Decimal& Decimal::pow(const Decimal& other)
-{
+	Decimal fact = 1;
+	Decimal mult = *this;
+	Decimal denom = 1;
+	Decimal fract = 1;
+	_val = 1;
+	_exp = 0;
+
+	uint16_t i;
+	for (i = 1; fract._val != 0 && fract._exp + count_digits(fract._val) > -18; i++) {
+		fact *= i;
+		denom *= mult;
+		fract = denom / fact;
+		operator+=(fract);
+	}
+	std::cout << unsigned(i) << std::endl;
 	return *this;
 }
 
 Decimal& Decimal::sqrt()
 {
+	operator^=(Decimal(5, -1));
 	return *this;
 }
 
-Decimal& Decimal::root(const Decimal& other)
+Decimal& Decimal::root(Decimal other)
 {
+	operator^=(Decimal(1) / other);
 	return *this;
 }
 
